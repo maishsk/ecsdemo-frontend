@@ -187,7 +187,7 @@ class FrontendServiceMesh(Stack):
             service_name='ecsdemo-frontend',
             task_definition=self.fargate_task_def,
             cluster=self.base_platform.ecs_cluster,
-            security_group=self.base_platform.services_sec_grp,
+            security_groups=[self.base_platform.services_sec_grp],
             desired_count=1,
             cloud_map_options=ecs.CloudMapOptions(
                 cloud_map_namespace=self.base_platform.sd_namespace,
@@ -205,11 +205,11 @@ class FrontendServiceMesh(Stack):
             mesh=self.mesh,
             virtual_node_name="frontend",
             listeners=[appmesh.VirtualNodeListener.http(port=3000)],
-            service_discovery=self.appmesh.ServiceDiscovery.cloud_map(self.fargate_service.cloud_map_service),
-            backends=[
-                appmesh.Backend.virtual_service(self.mesh_crystal_vs),
-                appmesh.Backend.virtual_service(self.mesh_nodejs_vs)
-                ],
+            service_discovery=appmesh.ServiceDiscovery.cloud_map(self.fargate_service.cloud_map_service),
+            # backends=[
+            #     appmesh.Backend.virtual_service(self.mesh_crystal_vs),
+            #     appmesh.Backend.virtual_service(self.mesh_nodejs_vs)
+            #     ],
             access_log=appmesh.AccessLog.from_file_path("/dev/stdout")
             
         )
@@ -312,7 +312,7 @@ class FrontendServiceMesh(Stack):
         
          # Asdding mesh virtual service 
         mesh_frontend_vs = appmesh.VirtualService(self,"mesh-frontend-vs",
-            virtual_service_provider=self.appmesh.VirtualServiceProvider.virtual_router(meshVR),
+            virtual_service_provider=appmesh.VirtualServiceProvider.virtual_router(meshVR),
             virtual_service_name="{}.{}".format(self.fargate_service.cloud_map_service.service_name,self.fargate_service.cloud_map_service.namespace.namespace_name)
         )
         
